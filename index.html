@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🟢 Aldi</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: #eee;
+      padding: 2rem;
+    }
+    .status-box {
+      background: #1c1c1c;
+      border-radius: 8px;
+      padding: 1rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    .site {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+    }
+    .status {
+      font-weight: bold;
+    }
+
+    .up { color: #00ff66; }
+    .down { color: #ff4444; }
+    .dev { color: #ffc107; }
+    .recovery { color: #ffff66; }
+    .backend { color: #ff8800; }
+    .closed { color: #ff5555; }
+    .tempclosed { color: #ffa500; }
+    .sleep { color: #00bfff; }
+    .private { color: #bbb; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="status-box" id="statusList">
+    <h2>&lt;!&gt;Aldi&lt;/&gt;🌐</h2>
+  </div>
+
+  <script>
+    const sites = [
+      { name: 'aldi.my.id', url: 'https://aldi.my.id' },
+      { name: 'aldi.setiadi.lat', url: 'https://aldi.setiadi.lat' },
+      { name: 'moviepage.miaw.my.id', status: 'recovery' },
+      { name: 'luzoryx.aldi.my.id', url: 'https://luzoryx.aldi.my.id' },
+      { name: 'sezoryx.aldi.my.id', url: 'https://sezoryx.aldi.my.id' },
+      { name: 'ke.aldi.my.id', status: 'backend' },
+      { name: 'dila.zone.id', url: 'https://dila.zone.id' },
+      { name: 'aldi.zone.id', url: 'https://aldi.zone.id' },
+      { name: 'blog.setiadi.lat', url: 'https://blog.setiadi.lat' },
+      { name: 'quotes.aldi.my.id', status: 'tempclosed' },
+      { name: 'pelukdulu.zone.id', status: 'dev' },
+      { name: 'hp.aldi.my.id', status: 'sleep' },
+      { name: 'ask.aldi.my.id', url: 'https://ask.aldi.my.id' },
+      { name: 'ff-uid.aldi.my.id', url: 'https://ff-uid.aldi.my.id' },
+      { name: 'nobar.aldi.my.id (Abandoned)', url: 'https://nobar.aldi.my.id' },
+      { name: 'sharequotes.aldi.my.id', url: 'https://sharequotes.aldi.my.id' },
+      { name: 'aldi.setiadiputra.my.id', url: 'https://aldi.setiadiputra.my.id' },
+      { name: 'rentry.co/aldi', url: 'https://rentry.co/aldi' },
+      { name: 'aldisetiadiputra.blogspot.com', url: 'https://aldisetiadiputra.blogspot.com/' },
+      { name: 'aldi.blue', status: 'closed' },
+      { name: 'end.aldi.my.id', status: 'closed' },
+      { name: 'arkaldius.aldi.my.id', status: 'closed' }
+    ];
+
+    const container = document.getElementById('statusList');
+
+    async function checkStatus(site) {
+      const customStatuses = {
+        'dev': { label: '🚧 Under Dev', class: 'dev' },
+        'recovery': { label: '🟡 Recovery', class: 'recovery' },
+        'backend': { label: '⚠️ Backend Down', class: 'backend' },
+        'closed': { label: '❌ Permanently Closed', class: 'closed' },
+        'tempclosed': { label: '⛔ Temporary Closed', class: 'tempclosed' },
+        'sleep': { label: '💤 Sleep', class: 'sleep' },
+        'private': { label: '🔒 Private', class: 'private' }
+      };
+
+      if (site.status && customStatuses[site.status]) {
+        const s = customStatuses[site.status];
+        return `<div class="site"><span>${site.name}</span><span class="status ${s.class}">${s.label}</span></div>`;
+      }
+
+      // Deteksi otomatis via fetch (untuk yang statusnya tidak ditentukan)
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const res = await fetch(site.url, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timeout);
+        return `<div class="site"><span>${site.name}</span><span class="status up">🟢 Online</span></div>`;
+      } catch (e) {
+        return `<div class="site"><span>${site.name}</span><span class="status down">🔴 Offline</span></div>`;
+      }
+    }
+
+    (async () => {
+      for (let site of sites) {
+        const html = await checkStatus(site);
+        container.innerHTML += html;
+      }
+    })();
+  </script>
+</body>
+</html>
