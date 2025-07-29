@@ -1,130 +1,76 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🟢 Aldi - Luzoryx</title>
+  <meta charset="UTF-8">
+  <title>Status Website Aldi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
-      font-family: sans-serif;
-      background: #111;
-      color: #eee;
-      padding: 2rem;
+      font-family: Arial, sans-serif;
+      background-color: #f2f4f8;
+      margin: 0;
+      padding: 30px;
     }
-    .status-box {
-      background: #1c1c1c;
-      border-radius: 8px;
-      padding: 1rem;
-      max-width: 600px;
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .site-list {
+      max-width: 800px;
       margin: auto;
+      background-color: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
     .site {
       display: flex;
       justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid #333;
+      padding: 10px 15px;
+      border-bottom: 1px solid #eee;
     }
-    .status {
-      font-weight: bold;
-    }
-    .checking { color: #888; }
-    .up { color: #00ff66; }
-    .down { color: #ff4444; }
-    .dev { color: #ffc107; }
-    .recovery { color: #ffff66; }
-    .backend { color: #ff8800; }
-    .closed { color: #ff5555; }
-    .tempclosed { color: #ffa500; }
-    .sleep { color: #00bfff; }
-    .private { color: #bbb; font-style: italic; }
+    .status-online { color: #27ae60; font-weight: bold; }
+    .status-offline { color: #c0392b; font-weight: bold; }
+    .status-unreachable { color: #f39c12; font-weight: bold; }
+    .custom-status { color: #2980b9; font-style: italic; }
   </style>
 </head>
 <body>
-  <div class="status-box" id="statusList">
-    <h2>&lt;!&gt;Aldi Status&lt;/&gt;🌐</h2>
-  </div>
 
-  <script>
-    const container = document.getElementById('statusList');
+<h1>Status Website Aldi</h1>
+<div class="site-list" id="statusContainer">Memuat data...</div>
 
-    // List domain tetap ditulis di frontend agar langsung tampil dulu
-    const domainList = [
-      'aldi.my.id', 'aldi.setiadi.lat', 'moviepage.miaw.my.id',
-      'trailify.zone.id', 'luzoryx.aldi.my.id', 'sezoryx.aldi.my.id',
-      'ke.aldi.my.id', 'dila.zone.id', 'aldi.zone.id', 'aldi.mine.bz',
-      'dila.mine.bz', 'aldi.qzz.io', 'aldi.minecraft.pe', 'aldi.kitty.to',
-      'aldi.home.kg', 'aldi.ftp.sh', 'aldi.info.gf', 'mbti.zone.id',
-      'infp.ix.tc', 'isfp.ix.tc', 'blog.setiadi.lat', 'ask.aldi.my.id',
-      'ff-uid.aldi.my.id', 'nobar.aldi.my.id', 'sharequotes.aldi.my.id',
-      'aldi.setiadiputra.my.id', 'aldisetiadiputra.rf.gd', 'rentry.co/aldi',
-      'aldisetiadiputra.blogspot.com', 'quotes.aldi.my.id',
-      'pelukdulu.zone.id', 'hp.aldi.my.id', 'end.aldi.my.id',
-      'arkaldius.aldi.my.id'
-    ];
+<script>
+fetch("https://status.aldi.my.id/status.php")
+  .then(response => response.json())
+  .then(data => {
+    const container = document.getElementById("statusContainer");
+    container.innerHTML = "";
 
-    const customStatuses = {
-      'dev': { label: '🚧 Under Dev', class: 'dev' },
-      'recovery': { label: '🟡 Recovery', class: 'recovery' },
-      'backend': { label: '⚠️ Backend Down', class: 'backend' },
-      'closed': { label: '❌ Permanently Closed', class: 'closed' },
-      'tempclosed': { label: '⛔ Temporary Closed', class: 'tempclosed' },
-      'sleep': { label: '💤 Sleep', class: 'sleep' },
-      'private': { label: '🔒 Private', class: 'private' }
-    };
-
-    // Render awal: semua status 'Checking...'
-    const renderInitialList = () => {
-      domainList.forEach(domain => {
-        const div = document.createElement('div');
-        div.className = 'site';
-        div.id = `site-${btoa(domain).replace(/=/g, '')}`; // Unique ID dari domain
-        div.innerHTML = `
-          <span>${domain}</span>
-          <span class="status checking">⏳ Checking...</span>
-        `;
-        container.appendChild(div);
-      });
-    };
-
-    // Update status setelah fetch
-    const updateStatuses = async () => {
-      try {
-        const res = await fetch("https://aldi.my.id/bcknd/statusaldi.php");
-        const data = await res.json();
-
-        for (const [domain, info] of Object.entries(data)) {
-          const id = `site-${btoa(domain).replace(/=/g, '')}`;
-          const row = document.getElementById(id);
-          if (!row) continue; // skip jika ID tidak ditemukan
-
-          let label = "", cssClass = "";
-
-          if (info.custom && customStatuses[info.custom]) {
-            label = customStatuses[info.custom].label;
-            cssClass = customStatuses[info.custom].class;
-          } else {
-            if (info.status === 'online') {
-              label = '🟢 Online';
-              cssClass = 'up';
-              if (info.ssl === 'invalid') label += ' ⚠️ SSL';
-            } else {
-              label = '🔴 Offline';
-              cssClass = 'down';
-            }
-          }
-
-          row.querySelector('.status').innerText = label;
-          row.querySelector('.status').className = `status ${cssClass}`;
-        }
-      } catch (err) {
-        container.innerHTML += `<div style="color: red;">Gagal ambil status 😢</div>`;
-        console.error(err);
+    Object.entries(data).forEach(([site, info]) => {
+      let statusText = '';
+      if (info.custom) {
+        statusText = `<span class="custom-status">${info.custom}</span>`;
+      } else if (info.status === 'online') {
+        statusText = `<span class="status-online">Online ✅</span>`;
+      } else if (info.status === 'offline') {
+        statusText = `<span class="status-offline">Offline ❌</span>`;
+      } else {
+        statusText = `<span class="status-unreachable">Tidak Terkoneksi ⚠️</span>`;
       }
-    };
 
-    // Jalankan
-    renderInitialList();
-    updateStatuses();
-  </script>
+      container.innerHTML += `
+        <div class="site">
+          <div>${site}</div>
+          <div>${statusText}</div>
+        </div>
+      `;
+    });
+  })
+  .catch(err => {
+    document.getElementById("statusContainer").innerHTML = `<p style="color:red;">Gagal memuat data: ${err}</p>`;
+  });
+</script>
+
 </body>
 </html>
