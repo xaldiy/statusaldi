@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🟢 Aldi - Luzoryx </title>
+  <title>🟢 Aldi - Luzoryx</title>
   <style>
     body {
       font-family: sans-serif;
@@ -27,7 +27,7 @@
     .status {
       font-weight: bold;
     }
-
+    .checking { color: #888; }
     .up { color: #00ff66; }
     .down { color: #ff4444; }
     .dev { color: #ffc107; }
@@ -47,6 +47,21 @@
   <script>
     const container = document.getElementById('statusList');
 
+    // List domain tetap ditulis di frontend agar langsung tampil dulu
+    const domainList = [
+      'aldi.my.id', 'aldi.setiadi.lat', 'moviepage.miaw.my.id',
+      'trailify.zone.id', 'luzoryx.aldi.my.id', 'sezoryx.aldi.my.id',
+      'ke.aldi.my.id', 'dila.zone.id', 'aldi.zone.id', 'aldi.mine.bz',
+      'dila.mine.bz', 'aldi.qzz.io', 'aldi.minecraft.pe', 'aldi.kitty.to',
+      'aldi.home.kg', 'aldi.ftp.sh', 'aldi.info.gf', 'mbti.zone.id',
+      'infp.ix.tc', 'isfp.ix.tc', 'blog.setiadi.lat', 'ask.aldi.my.id',
+      'ff-uid.aldi.my.id', 'nobar.aldi.my.id', 'sharequotes.aldi.my.id',
+      'aldi.setiadiputra.my.id', 'aldisetiadiputra.rf.gd', 'rentry.co/aldi',
+      'aldisetiadiputra.blogspot.com', 'quotes.aldi.my.id',
+      'pelukdulu.zone.id', 'hp.aldi.my.id', 'end.aldi.my.id',
+      'arkaldius.aldi.my.id'
+    ];
+
     const customStatuses = {
       'dev': { label: '🚧 Under Dev', class: 'dev' },
       'recovery': { label: '🟡 Recovery', class: 'recovery' },
@@ -57,37 +72,59 @@
       'private': { label: '🔒 Private', class: 'private' }
     };
 
-    async function loadStatuses() {
+    // Render awal: semua status 'Checking...'
+    const renderInitialList = () => {
+      domainList.forEach(domain => {
+        const div = document.createElement('div');
+        div.className = 'site';
+        div.id = `site-${btoa(domain).replace(/=/g, '')}`; // Unique ID dari domain
+        div.innerHTML = `
+          <span>${domain}</span>
+          <span class="status checking">⏳ Checking...</span>
+        `;
+        container.appendChild(div);
+      });
+    };
+
+    // Update status setelah fetch
+    const updateStatuses = async () => {
       try {
         const res = await fetch("https://aldi.my.id/bcknd/statusaldi.php");
         const data = await res.json();
 
-        for (const [name, info] of Object.entries(data)) {
+        for (const [domain, info] of Object.entries(data)) {
+          const id = `site-${btoa(domain).replace(/=/g, '')}`;
+          const row = document.getElementById(id);
+          if (!row) continue; // skip jika ID tidak ditemukan
+
           let label = "", cssClass = "";
 
           if (info.custom && customStatuses[info.custom]) {
             label = customStatuses[info.custom].label;
             cssClass = customStatuses[info.custom].class;
           } else {
-            label = info.status === 'online' ? '🟢 Online' : '🔴 Offline';
-            cssClass = info.status === 'online' ? 'up' : 'down';
-            if (info.ssl === 'invalid') {
-              label += ' ⚠️ SSL';
+            if (info.status === 'online') {
+              label = '🟢 Online';
+              cssClass = 'up';
+              if (info.ssl === 'invalid') label += ' ⚠️ SSL';
+            } else {
+              label = '🔴 Offline';
+              cssClass = 'down';
             }
           }
 
-          const html = `<div class="site">
-              <span>${name}</span>
-              <span class="status ${cssClass}">${label}</span>
-            </div>`;
-          container.innerHTML += html;
+          row.querySelector('.status').innerText = label;
+          row.querySelector('.status').className = `status ${cssClass}`;
         }
       } catch (err) {
         container.innerHTML += `<div style="color: red;">Gagal ambil status 😢</div>`;
+        console.error(err);
       }
-    }
+    };
 
-    loadStatuses();
+    // Jalankan
+    renderInitialList();
+    updateStatuses();
   </script>
 </body>
 </html>
