@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>🟢 Aldi ?</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 1rem; background: #f2f2f2; }
+    .result { background: #fff; padding: 0.5rem 1rem; margin: 0.5rem 0; border-left: 5px solid #ddd; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .result strong { display: block; margin-bottom: 0.3rem; }
+    .button { margin-top: 0.4rem; padding: 5px 10px; font-size: 0.9rem; cursor: pointer; border: none; background-color: #3498db; color: #fff; border-radius: 4px; }
+    .button:hover { background-color: #2980b9; }
+    .tag { display: inline-block; margin-top: 0.4rem; padding: 3px 8px; font-size: 0.8rem; border-radius: 4px; background: #eee; color: #333; }
+
+    .dev { background: #f39c12; color: white; }
+    .recovery { background: #f1c40f; color: #000; }
+    .backend { background: #d35400; color: white; }
+    .closed { background: #c0392b; color: white; }
+    .tempclosed { background: #7f8c8d; color: white; }
+    .sleep { background: #8e44ad; color: white; }
+    .mostlyaman { background: #27ae60; color: white; }
+    .private { background: #34495e; color: white; }
+
+    #popup {
+      display: none;
+      position: fixed;
+      top: 10%;
+      left: 10%;
+      width: 80%;
+      height: 80%;
+      background: #fff;
+      border: 2px solid #ccc;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+      z-index: 9999;
+      padding: 1rem;
+    }
+    #popup button {
+      float: right;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    #popup h3 {
+      margin-top: 0;
+    }
+    #popupFrame {
+      width: 100%;
+      height: 85%;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+  <h2>Cek Status Domain</h2>
+  <p>Menampilkan status domain dan memungkinkan tes iframe preview manual.</p>
+  <div id="results"></div>
+
+  <div id="popup">
+    <button onclick="closePopup()">❌ Close</button>
+    <h3>Preview Iframe Domain</h3>
+    <iframe id="popupFrame" src=""></iframe>
+  </div>
+
+  <script>
+    const domainList = [
+      'aldi.my.id', 'aldi.setiadi.lat', 'moviepage.miaw.my.id',
+      'trailify.zone.id', 'luzoryx.aldi.my.id', 'sezoryx.aldi.my.id',
+      'ke.aldi.my.id', 'dila.zone.id', 'aldi.zone.id', 'aldi.mine.bz',
+      'dila.mine.bz', 'aldi.qzz.io', 'aldi.minecraft.pe', 'aldi.kitty.to',
+      'aldi.home.kg', 'aldi.ftp.sh', 'aldi.info.gf', 'mbti.zone.id',
+      'infp.ix.tc', 'isfp.ix.tc', 'blog.setiadi.lat', 'ask.aldi.my.id',
+      'ff-uid.aldi.my.id', 'nobar.aldi.my.id', 'sharequotes.aldi.my.id',
+      'aldi.setiadiputra.my.id', 'aldisetiadiputra.rf.gd', 'rentry.co/aldi',
+      'aldisetiadiputra.blogspot.com', 'quotes.aldi.my.id',
+      'pelukdulu.zone.id', 'hp.aldi.my.id', 'end.aldi.my.id',
+      'arkaldius.aldi.my.id'
+    ];
+
+    const customStatuses = {
+      'dev': { label: '🚧 Under Dev', class: 'dev' },
+      'recovery': { label: '🟡 Recovery', class: 'recovery' },
+      'backend': { label: '⚠️ Backend Down', class: 'backend' },
+      'closed': { label: '❌ Permanently Closed', class: 'closed' },
+      'tempclosed': { label: '⛔ Temporary Closed', class: 'tempclosed' },
+      'sleep': { label: '💤 Sleep', class: 'sleep' },
+      'mostlyaman': { label: 'Harusnya sih accessible, cek manual', class: 'mostlyaman' },
+      'private': { label: '🔒 Private', class: 'private' }
+    };
+
+    const domainRules = {
+      'hp.aldi.my.id': 'sleep',
+      'arkaldius.aldi.my.id': 'closed',
+      'end.aldi.my.id': 'closed',
+      'quotes.aldi.my.id': 'tempclosed',
+      'pelukdulu.zone.id': 'dev',
+      'aldisetiadiputra.rf.gd': 'mostlyaman'
+    };
+
+    const resultsDiv = document.getElementById('results');
+
+    function showPopup(domain) {
+      document.getElementById('popupFrame').src = `https://aldi.my.id/bcknd/status/test-iframe.php?target=${domain}`;
+      document.getElementById('popup').style.display = 'block';
+    }
+
+    function closePopup() {
+      document.getElementById('popupFrame').src = '';
+      document.getElementById('popup').style.display = 'none';
+    }
+
+    (async function runSequentialCheck() {
+      for (const domain of domainList) {
+        try {
+          const res = await fetch(`https://aldi.my.id/bcknd/status/check.php?domain=${domain}`);
+          const data = await res.json();
+
+          const el = document.createElement('div');
+          el.className = 'result';
+
+          let statusText = `Status: ${data.reachable ? '✅ Online' : '⚠️ Mungkin Offline'} (${data.status || 'Error'})`;
+          let label = '';
+
+          if (domainRules[domain]) {
+            const ruleKey = domainRules[domain];
+            const custom = customStatuses[ruleKey];
+            if (custom) {
+              label = `<span class="tag ${custom.class}">${custom.label}</span>`;
+            }
+          }
+
+          el.innerHTML = `
+            <strong>${domain}</strong>
+            ${statusText} ${label}
+            <br>
+            <button class="button" onclick="showPopup('${domain}')">🔍 Cek Iframe</button>
+          `;
+          resultsDiv.appendChild(el);
+        } catch (err) {
+          const el = document.createElement('div');
+          el.className = 'result';
+          el.innerHTML = `
+            <strong>${domain}</strong>
+            ❌ Gagal fetch (${err.message})
+            <br>
+            <button class="button" onclick="showPopup('${domain}')">🔍 Cek Iframe</button>
+          `;
+          resultsDiv.appendChild(el);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>
